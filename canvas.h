@@ -13,6 +13,8 @@ class Canvas : public QWidget {
 
   Painter *painter;
   QImage current_image;
+  // fixme: move this piece of logic to painter
+  bool painter_initialized = false;
 
  public:
   explicit Canvas(QWidget *parent = nullptr);

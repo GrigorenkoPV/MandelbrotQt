@@ -1,4 +1,5 @@
 #pragma once
+#include <QColor>
 #include <QImage>
 #include <QMutex>
 #include <QWaitCondition>
@@ -21,14 +22,20 @@ class Painter : public QObject {
  private:
   void run();
   // caller must hold the mutex
-  void cancelCurrent();
+  void requestRedraw();
 
  public:
-  void reset(QSize new_size);
-  void setImageSize(QSize new_size);
-  void changeCenterPositionBy(QSize pixel_offset);
-  // todo change zoom
-  void setIterations(unsigned new_iterations);
+  bool reset(QSize new_size);
+  bool setImageSize(QSize new_size);
+  bool changeCenterPositionBy(QSize pixel_offset);
+  bool multiplyZoomBy(qreal multiple);
+  bool setMaxIterations(unsigned new_max_iterations);
+
+ private:
+  static quint32 getColor(qreal x0, qreal y0, unsigned int max_iterations,
+                          qreal threshold);
+  static QImage render(QSize size, QPointF center, qreal zoom,
+                       unsigned max_iterations, qreal threshold);
 
  signals:
   void sendImage(QImage image);

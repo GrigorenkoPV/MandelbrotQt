@@ -2,12 +2,13 @@
 
 #include <QPainter>
 #include <QThread>
-#include <iostream>
 
 namespace mandelbrot {
 
 Canvas::Canvas(QWidget* parent)
     : QWidget(parent), painter(new Painter()), current_image() {
+  // todo: improve focus policy when mouse controls or other widgets are ready
+  setFocusPolicy(Qt::StrongFocus);
   auto thread = new QThread();
   painter->moveToThread(thread);
   QObject::connect(thread, &QThread::started, painter, &Painter::start);
@@ -21,13 +22,17 @@ Canvas::Canvas(QWidget* parent)
 Canvas::~Canvas() { emit stopPainter(); }
 
 void Canvas::paintEvent(QPaintEvent* event) {
-  painter->setImageSize(this->size());
+  if (painter_initialized) {
+    painter->setImageSize(this->size());
+  } else {
+    painter->reset(this->size());
+    painter_initialized = true;
+  }
   QPainter{this}.drawImage(0, 0, current_image);
 }
 
 void Canvas::keyPressEvent(QKeyEvent* event) {
   constexpr auto DOTS_PER_MOVE = 20;
-  std::cerr << event->key() << std::endl;
   switch (event->key()) {
     case Qt::Key_Home:
       painter->reset(this->size());
@@ -45,10 +50,12 @@ void Canvas::keyPressEvent(QKeyEvent* event) {
       painter->changeCenterPositionBy({DOTS_PER_MOVE, 0});
       break;
     case Qt::Key_Minus:
-      // todo zoom out
+      painter->multiplyZoomBy(1.2);
+      break;
     case Qt::Key_Plus:
     case Qt::Key_Equal:
-      // todo zoom in
+      painter->multiplyZoomBy(1 / 1.2);
+      break;
     default:
       QWidget::keyPressEvent(event);
       return;
