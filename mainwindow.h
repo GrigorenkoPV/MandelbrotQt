@@ -14,6 +14,8 @@ class MainWindow : public QMainWindow {
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
+  // todo a cool menu that allows you to change number of iterations and whatnot
+
  private:
   Ui::MainWindow *ui;
 };

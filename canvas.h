@@ -20,10 +20,11 @@ class Canvas : public QWidget {
  protected:
   void paintEvent(QPaintEvent *event) override;
 
- signals:
-  void request_new_image(QSize size);
+  void keyPressEvent(QKeyEvent *event) override;
+
+  // todo mouse controls
 
  public slots:
-  void receive_new_image(QImage image);
+  void receiveNewImage(QImage image);
 };
 }  // namespace mandelbrot
