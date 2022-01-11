@@ -1,31 +1,27 @@
 #pragma once
 #include <QImage>
 #include <QMutex>
-#include <QThread>
+#include <QWaitCondition>
 
 #include "params.h"
 
 namespace mandelbrot {
-// fixme:
-//  either don't inherit from QThread
-//  or implement proper shutdown mechanism
-//  (because currently Canvas just destroys the object
-//   before the thread is finished, which is not good)
-class Painter : public QThread {
+class Painter : public QObject {
   Q_OBJECT
 
-  Params params;
-  QMutex params_mutex;
+  Params params = {};
+  QMutex mutex = {};
+  bool cancellation_requested = false;
+  bool stop_requested = false;
+  QWaitCondition condition = {};
 
  public:
   Painter() = default;
 
- protected:
-  [[noreturn]] void run() override;
-
  private:
+  void run();
   // caller must hold the mutex
-  void initiateRedraw();
+  void cancelCurrent();
 
  public:
   void reset(QSize new_size);
@@ -35,6 +31,11 @@ class Painter : public QThread {
   void setIterations(unsigned new_iterations);
 
  signals:
-  void sendNewImage(QImage image);
+  void sendImage(QImage image);
+  void finished();
+
+ public slots:
+  void start();
+  void stop();
 };
 }  // namespace mandelbrot

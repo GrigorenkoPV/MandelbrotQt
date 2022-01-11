@@ -11,11 +11,12 @@ namespace mandelbrot {
 class Canvas : public QWidget {
   Q_OBJECT
 
-  Painter painter;
+  Painter *painter;
   QImage current_image;
 
  public:
   explicit Canvas(QWidget *parent = nullptr);
+  ~Canvas() override;
 
  protected:
   void paintEvent(QPaintEvent *event) override;
@@ -24,7 +25,11 @@ class Canvas : public QWidget {
 
   // todo mouse controls
 
+ private:
+ signals:
+  void stopPainter();
+
  public slots:
-  void receiveNewImage(QImage image);
+  void receiveImage(QImage image);
 };
 }  // namespace mandelbrot
