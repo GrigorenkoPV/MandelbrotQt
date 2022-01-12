@@ -50,8 +50,6 @@ class Renderer : public QObject {
  private:
   static quint32 renderPointInRGB(qreal x0, qreal y0,
                                   unsigned int max_iterations, qreal threshold);
-  static QImage renderImage(RenderingJob const& params,
-                            unsigned const duplicates);
   void doJob(RenderingJob const& job);
 
  signals:

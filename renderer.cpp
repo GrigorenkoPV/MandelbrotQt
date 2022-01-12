@@ -124,58 +124,51 @@ std::ostream& operator<<(std::ostream& os, RenderingJob const& job) {
 }
 #endif
 
-QImage Renderer::renderImage(RenderingJob const& params,
-                             unsigned const duplicates) {
-  // todo: parallelism and better cancellability
-  assert(params.canvas_size.isValid());
-#ifndef NDEBUG
-  auto t_start = std::chrono::high_resolution_clock::now();
-#endif
-  QImage image(params.canvas_size, QImage::Format_RGB32);
-  auto const stride = image.bytesPerLine();
-  unsigned const width = params.canvas_size.width();
-  unsigned const height = params.canvas_size.height();
-  auto const start_point_point =
-      params.center - QPointF(width, height) / 2 * params.zoom;
-  QPointF point = start_point_point;
-  for (unsigned y = 0; y < height;) {
-    auto const etalon_row = image.bits() + stride * y;
-    point.setX(start_point_point.x());
-    for (unsigned x = 0; x < width;) {
-      auto const color = renderPointInRGB(
-          point.x(), point.y(), params.max_iterations, params.threshold);
-      auto const n = std::min(duplicates + 1, width - x);
-      std::fill_n(reinterpret_cast<quint32*>(etalon_row) + x, n, color);
-      x += n;
-      point.rx() += params.zoom * n;
-    }
-    for (unsigned d = 0; (d < duplicates) && (y + d + 1 < height); ++d) {
-      std::memcpy(etalon_row + stride * (d + 1), etalon_row, stride);
-    }
-    y += duplicates + 1;
-    point.ry() += params.zoom * (duplicates + 1);
-  }
-#ifndef NDEBUG
-  auto t_end = std::chrono::high_resolution_clock::now();
-  std::cerr
-      << "Rendered " << params << " with " << duplicates << " duplicates in "
-      << std::chrono::duration<double, std::milli>(t_end - t_start).count()
-      << "ms" << std::endl;
-#endif
-  return image;
-}
-
+// todo: parallelism maybe?
 void Renderer::doJob(const RenderingJob& job) {
+  // todo: get rid of `duplicates` & come up with a better square_side sequnce
   for (unsigned square_side = 1 << 4; square_side != 0; square_side /= 4) {
-    QImage image = renderImage(job, square_side - 1);
-    QMutexLocker qml(&mutex);
-    if (has_new_job_or_jobs_ended) {
+    auto const duplicates = square_side - 1;
 #ifndef NDEBUG
-      std::cerr << "Stopping at " << square_side - 1 << " duplicates"
-                << std::endl;
+    auto t_start = std::chrono::high_resolution_clock::now();
 #endif
-      return;
+    QImage image(job.canvas_size, QImage::Format_RGB32);
+    auto const stride = image.bytesPerLine();
+    unsigned const width = job.canvas_size.width();
+    unsigned const height = job.canvas_size.height();
+    auto const start_point_point =
+        job.center - QPointF(width, height) / 2 * job.zoom;
+    QPointF point = start_point_point;
+    for (unsigned y = 0; y < height;) {
+      auto const etalon_row = image.bits() + stride * y;
+      point.setX(start_point_point.x());
+      for (unsigned x = 0; x < width;) {
+        auto const color = renderPointInRGB(point.x(), point.y(),
+                                            job.max_iterations, job.threshold);
+        auto const n = std::min(duplicates + 1, width - x);
+        std::fill_n(reinterpret_cast<quint32*>(etalon_row) + x, n, color);
+        x += n;
+        point.rx() += job.zoom * n;
+      }
+      {
+        QMutexLocker qml(&mutex);
+        if (has_new_job_or_jobs_ended) {
+          return;
+        }
+      }
+      for (unsigned d = 0; (d < duplicates) && (y + d + 1 < height); ++d) {
+        std::memcpy(etalon_row + stride * (d + 1), etalon_row, stride);
+      }
+      y += duplicates + 1;
+      point.ry() += job.zoom * (duplicates + 1);
     }
+#ifndef NDEBUG
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::cerr
+        << "Rendered " << job << " with " << duplicates << " duplicates in "
+        << std::chrono::duration<double, std::milli>(t_end - t_start).count()
+        << "ms" << std::endl;
+#endif
     emit sendImage(std::move(image));
   }
 }
