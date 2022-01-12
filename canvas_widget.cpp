@@ -6,7 +6,10 @@
 namespace mandelbrot {
 
 CanvasWidget::CanvasWidget(QWidget* parent)
-    : QWidget(parent), renderer(new Renderer()), current_image() {
+    : QWidget(parent),
+      renderer(new Renderer()),
+      current_image(),
+      last_mouse_position() {
   // todo: improve focus policy when mouse controls or other widgets are ready
   setFocusPolicy(Qt::StrongFocus);
   auto thread = new QThread();
@@ -25,8 +28,10 @@ CanvasWidget::CanvasWidget(QWidget* parent)
 
 CanvasWidget::~CanvasWidget() { emit stopRenderer(); }
 
-void CanvasWidget::paintEvent(QPaintEvent* event) {
+void CanvasWidget::resizeEvent(QResizeEvent* event) {
   renderer->setImageSize(this->size());
+}
+void CanvasWidget::paintEvent(QPaintEvent* event) {
   QPainter{this}.drawImage(0, 0, current_image);
 }
 
@@ -59,6 +64,23 @@ void CanvasWidget::keyPressEvent(QKeyEvent* event) {
       QWidget::keyPressEvent(event);
       return;
   }
+}
+
+void CanvasWidget::mousePressEvent(QMouseEvent* event) {
+  if (event->buttons() & Qt::LeftButton) {
+    last_mouse_position = event->pos();
+  }
+}
+void CanvasWidget::mouseMoveEvent(QMouseEvent* event) {
+  if (event->buttons() & Qt::LeftButton) {
+    renderer->changeCenterPositionBy(last_mouse_position - event->pos());
+    last_mouse_position = event->pos();
+  }
+}
+
+void CanvasWidget::wheelEvent(QWheelEvent* event) {
+  // todo: zoom with wheel
+  QWidget::wheelEvent(event);
 }
 
 void CanvasWidget::receiveImage(QImage image) {

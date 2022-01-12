@@ -43,7 +43,7 @@ class Renderer : public QObject {
 
  public:
   bool setImageSize(QSize new_size, bool reset_pan = false);
-  bool changeCenterPositionBy(QSize pixel_offset);
+  bool changeCenterPositionBy(QPoint pixel_offset);
   bool multiplyZoomBy(qreal multiple);
   bool setMaxIterations(unsigned new_max_iterations);
 

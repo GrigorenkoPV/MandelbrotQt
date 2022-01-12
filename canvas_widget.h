@@ -13,15 +13,22 @@ class CanvasWidget : public QWidget {
 
   Renderer *renderer;
   QImage current_image;
+  QPoint last_mouse_position;
 
  public:
   explicit CanvasWidget(QWidget *parent = nullptr);
   ~CanvasWidget() override;
 
  protected:
+  void resizeEvent(QResizeEvent *event) override;
   void paintEvent(QPaintEvent *event) override;
 
   void keyPressEvent(QKeyEvent *event) override;
+
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+
+  void wheelEvent(QWheelEvent *event) override;
 
   // todo mouse controls
 

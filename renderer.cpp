@@ -56,14 +56,12 @@ bool Renderer::setImageSize(QSize new_size, bool reset_pan) {
   return true;
 }
 
-bool Renderer::changeCenterPositionBy(QSize pixel_offset) {
-  if (pixel_offset.isNull()) {
-    return false;
+bool Renderer::changeCenterPositionBy(QPoint pixel_offset) {
+  if (!pixel_offset.isNull()) {
+    QMutexLocker qml(&mutex);
+    next_job.center += QPointF(pixel_offset) * next_job.zoom;
+    jumpToNextJob();
   }
-  QMutexLocker qml(&mutex);
-  next_job.center +=
-      QPointF(pixel_offset.width(), pixel_offset.height()) * next_job.zoom;
-  jumpToNextJob();
   return true;
 }
 
