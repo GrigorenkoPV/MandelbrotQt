@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QThread>
+#include <cmath>
 
 namespace mandelbrot {
 
@@ -79,8 +80,9 @@ void CanvasWidget::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void CanvasWidget::wheelEvent(QWheelEvent* event) {
-  // todo: zoom with wheel
-  QWidget::wheelEvent(event);
+  // todo: cooler zoom by moving params into canvas
+  //  this will also reduce the number of mutex locking
+  renderer->multiplyZoomBy(std::exp(event->angleDelta().y() * -0.002));
 }
 
 void CanvasWidget::receiveImage(QImage image) {

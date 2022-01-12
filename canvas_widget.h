@@ -30,8 +30,6 @@ class CanvasWidget : public QWidget {
 
   void wheelEvent(QWheelEvent *event) override;
 
-  // todo mouse controls
-
  private:
  signals:
   void stopRenderer();
