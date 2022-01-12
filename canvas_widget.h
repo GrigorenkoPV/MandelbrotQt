@@ -5,20 +5,18 @@
 #include <QSize>
 #include <QWidget>
 
-#include "painter.h"
+#include "renderer.h"
 
 namespace mandelbrot {
-class Canvas : public QWidget {
+class CanvasWidget : public QWidget {
   Q_OBJECT
 
-  Painter *painter;
+  Renderer *renderer;
   QImage current_image;
-  // fixme: move this piece of logic to painter
-  bool painter_initialized = false;
 
  public:
-  explicit Canvas(QWidget *parent = nullptr);
-  ~Canvas() override;
+  explicit CanvasWidget(QWidget *parent = nullptr);
+  ~CanvasWidget() override;
 
  protected:
   void paintEvent(QPaintEvent *event) override;
@@ -29,7 +27,7 @@ class Canvas : public QWidget {
 
  private:
  signals:
-  void stopPainter();
+  void stopRenderer();
 
  public slots:
   void receiveImage(QImage image);

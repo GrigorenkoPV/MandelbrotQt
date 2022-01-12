@@ -26,10 +26,10 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        canvas.cpp
-        canvas.h
-        painter.cpp
-        painter.h
+        canvas_widget.cpp
+        canvas_widget.h
+        renderer.cpp
+        renderer.h
         )
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
