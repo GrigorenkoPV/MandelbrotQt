@@ -6,12 +6,20 @@
 #include <cstring>
 #include <vector>
 
+#include "rendering_job.h"
+
 #ifndef NDEBUG
 #include <chrono>
 #include <iostream>
 #endif
 
 namespace mandelbrot {
+
+void Renderer::setNextJob(RenderingJob job) {
+  QMutexLocker qml(&mutex);
+  next_job = job;
+  jumpToNextJob();
+};
 
 std::optional<RenderingJob> Renderer::getNextJob() {
   QMutexLocker qml(&mutex);
@@ -31,63 +39,6 @@ std::optional<RenderingJob> Renderer::getNextJob() {
 void Renderer::jumpToNextJob() {
   has_new_job_or_jobs_ended = true;
   waiting_for_job.wakeAll();
-}
-
-bool Renderer::setImageSize(QSize new_size, bool reset_pan) {
-  if (!new_size.isValid()) {
-    return false;
-  }
-  QMutexLocker qml(&mutex);
-  if (std::isnan(next_job.zoom)) {
-    reset_pan = true;
-  }
-  if (!reset_pan && next_job.canvas_size == new_size) {
-    return true;
-  }
-  if (reset_pan) {
-    if (new_size.isEmpty()) {
-      return false;
-    }
-    next_job = RenderingJob();
-    next_job.zoom = std::max(3. / new_size.width(), 2. / new_size.height());
-  }
-  next_job.canvas_size = new_size;
-  jumpToNextJob();
-  return true;
-}
-
-bool Renderer::changeCenterPositionBy(QPoint pixel_offset) {
-  if (!pixel_offset.isNull()) {
-    QMutexLocker qml(&mutex);
-    next_job.center += QPointF(pixel_offset) * next_job.zoom;
-    jumpToNextJob();
-  }
-  return true;
-}
-
-bool Renderer::multiplyZoomBy(qreal multiple) {
-  if (multiple <= 0) {
-    return false;
-  }
-  if (multiple == 1) {
-    return true;
-  }
-  QMutexLocker qml(&mutex);
-  next_job.zoom *= multiple;
-  jumpToNextJob();
-  return true;
-}
-
-bool Renderer::setMaxIterations(unsigned new_max_iterations) {
-  if (new_max_iterations == 0) {
-    return false;
-  }
-  QMutexLocker qml(&mutex);
-  if (next_job.max_iterations != new_max_iterations) {
-    next_job.max_iterations = new_max_iterations;
-    jumpToNextJob();
-  }
-  return true;
 }
 
 quint32 Renderer::renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
@@ -124,7 +75,7 @@ std::ostream& operator<<(std::ostream& os, RenderingJob const& job) {
 
 // todo: parallelism maybe?
 void Renderer::doJob(const RenderingJob& job) {
-  // todo: get rid of `duplicates` & come up with a better square_side sequnce
+  // todo: get rid of `duplicates` & come up with a better square_side sequence
   for (unsigned square_side = 1 << 4; square_side != 0; square_side /= 4) {
     auto const duplicates = square_side - 1;
 #ifndef NDEBUG
@@ -171,7 +122,7 @@ void Renderer::doJob(const RenderingJob& job) {
   }
 }
 
-void Renderer::start() {
+void Renderer::run() {
   for (auto job = getNextJob(); job.has_value(); job = getNextJob()) {
     doJob(*job);
   }

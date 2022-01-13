@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include "renderer.h"
+#include "rendering_job.h"
 
 namespace mandelbrot {
 class CanvasWidget : public QWidget {
@@ -14,10 +15,15 @@ class CanvasWidget : public QWidget {
   Renderer *renderer;
   QImage current_image;
   QPoint last_mouse_position;
+  RenderingJob params;
 
  public:
   explicit CanvasWidget(QWidget *parent = nullptr);
   ~CanvasWidget() override;
+
+  void redraw();
+
+  bool setImageSize(QSize new_size, bool reset_pan = false);
 
  protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -29,10 +35,6 @@ class CanvasWidget : public QWidget {
   void mouseMoveEvent(QMouseEvent *event) override;
 
   void wheelEvent(QWheelEvent *event) override;
-
- private:
- signals:
-  void stopRenderer();
 
  public slots:
   void receiveImage(QImage image);
