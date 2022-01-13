@@ -23,7 +23,14 @@ class CanvasWidget : public QWidget {
 
   void redraw();
 
-  bool setImageSize(QSize new_size, bool reset_pan = false);
+  void resetPan();
+  void reset();
+
+  [[nodiscard]] unsigned getMaxIterations() const;
+  void setMaxIterations(unsigned value);
+
+ private:
+  bool setImageSize(QSize new_size);
 
  protected:
   void resizeEvent(QResizeEvent *event) override;

@@ -7,15 +7,23 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow {
+class MainWindow final : public QMainWindow {
   Q_OBJECT
 
- public:
-  MainWindow(QWidget *parent = nullptr);
-  ~MainWindow();
+  Ui::MainWindow *ui;
 
-  // todo a cool menu that allows you to change number of iterations and whatnot
+  // todo: polish the menu
+  // todo: add threshold selector
+  // todo: two reset buttons
+
+ public:
+  explicit MainWindow(QWidget *parent = nullptr);
+  ~MainWindow() final;
 
  private:
-  Ui::MainWindow *ui;
+  void resetMenu();
+
+ public slots:
+  void reset();
+  void applySettings();
 };

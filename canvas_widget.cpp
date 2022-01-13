@@ -12,8 +12,7 @@ CanvasWidget::CanvasWidget(QWidget* parent)
       current_image(),
       last_mouse_position(),
       params() {
-  // todo: improve focus policy when other widgets are ready
-  setFocusPolicy(Qt::StrongFocus);
+  setFocusPolicy(Qt::ClickFocus);
   auto thread = new QThread();
   renderer->moveToThread(thread);
   QObject::connect(thread, &QThread::started, renderer, &Renderer::run);
@@ -30,25 +29,40 @@ CanvasWidget::~CanvasWidget() { renderer->stop(); }
 
 void CanvasWidget::redraw() { renderer->setNextJob(params); }
 
-bool CanvasWidget::setImageSize(QSize new_size, bool reset_pan) {
+void CanvasWidget::resetPan() {
+  params.center = DEFAULT_CENTER;
+  params.zoom = std::max(3. / params.canvas_size.width(),
+                         2. / params.canvas_size.height());
+  redraw();
+}
+
+void CanvasWidget::reset() {
+  params.max_iterations = DEFAULT_MAX_ITERATIONS;
+  params.threshold = DEFAULT_THRESHOLD;
+  resetPan();
+}
+
+unsigned CanvasWidget::getMaxIterations() const {
+  return params.max_iterations;
+}
+void CanvasWidget::setMaxIterations(unsigned value) {
+  params.max_iterations = value;
+}
+
+bool CanvasWidget::setImageSize(QSize new_size) {
   if (!new_size.isValid()) {
     return false;
   }
   if (std::isnan(params.zoom)) {
-    reset_pan = true;
-  }
-  if (!reset_pan && params.canvas_size == new_size) {
-    return true;
-  }
-  if (reset_pan) {
     if (new_size.isEmpty()) {
       return false;
     }
-    params = RenderingJob();
-    params.zoom = std::max(3. / new_size.width(), 2. / new_size.height());
+    params.canvas_size = new_size;
+    resetPan();
+  } else if (params.canvas_size != new_size) {
+    params.canvas_size = new_size;
+    redraw();
   }
-  params.canvas_size = new_size;
-  redraw();
   return true;
 }
 
@@ -63,7 +77,7 @@ void CanvasWidget::keyPressEvent(QKeyEvent* event) {
   constexpr auto DOTS_PER_MOVE = 20;
   switch (event->key()) {
     case Qt::Key_Home:
-      setImageSize(this->size(), true);
+      resetPan();
       return;
     case Qt::Key_Down:
       params.center.ry() += DOTS_PER_MOVE * params.zoom;
