@@ -12,9 +12,6 @@ class MainWindow final : public QMainWindow {
 
   Ui::MainWindow *ui;
 
-  // todo: polish the menu
-  // todo: two reset buttons
-
  public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow() final;
@@ -24,5 +21,6 @@ class MainWindow final : public QMainWindow {
 
  public slots:
   void reset();
+  void resetPan();
   void applySettings();
 };

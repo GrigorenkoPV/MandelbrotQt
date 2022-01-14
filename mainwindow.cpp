@@ -14,7 +14,10 @@ MainWindow::MainWindow(QWidget *parent)
   ui->threshold_spinbox->setMaximum(MAXIMAL_THRESHOLD);
   connect(ui->apply_button, &QPushButton::clicked, this,
           &MainWindow::applySettings);
-  connect(ui->reset_button, &QPushButton::clicked, this, &MainWindow::reset);
+  connect(ui->reset_all_button, &QPushButton::clicked, this,
+          &MainWindow::reset);
+  connect(ui->reset_pan_button, &QPushButton::clicked, this,
+          &MainWindow::resetPan);
   resetMenu();
 }
 
@@ -29,6 +32,7 @@ void MainWindow::reset() {
   ui->canvas->reset();
   resetMenu();
 }
+void MainWindow::resetPan() { ui->canvas->resetPan(); }
 void MainWindow::applySettings() {
   bool anything_changed = false;
   bool ok = ui->canvas->setMaxIterations(ui->maxiteration_spinbox->value());
