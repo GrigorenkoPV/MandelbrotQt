@@ -13,7 +13,6 @@ class MainWindow final : public QMainWindow {
   Ui::MainWindow *ui;
 
   // todo: polish the menu
-  // todo: add threshold selector
   // todo: two reset buttons
 
  public:

@@ -26,8 +26,10 @@ class CanvasWidget : public QWidget {
   void resetPan();
   void reset();
 
-  [[nodiscard]] unsigned getMaxIterations() const;
-  void setMaxIterations(unsigned value);
+  [[nodiscard]] unsigned getMaxIterations() const noexcept;
+  bool setMaxIterations(unsigned value) noexcept;
+  [[nodiscard]] qreal getThreshold() const noexcept;
+  bool setThreshold(qreal threshold) noexcept;
 
  private:
   bool setImageSize(QSize new_size);

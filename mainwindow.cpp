@@ -8,8 +8,10 @@ using namespace mandelbrot;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
-  ui->maxiteration_spinbox->setMinimum(MIN_MAX_ITERATIONS);
-  ui->maxiteration_spinbox->setMaximum(MAX_MAX_ITERATIONS);
+  ui->maxiteration_spinbox->setMinimum(MINIMAL_MAX_ITERATIONS);
+  ui->maxiteration_spinbox->setMaximum(MAXIMAL_MAX_ITERATIONS);
+  ui->threshold_spinbox->setMinimum(MINIMAL_THRESHOLD);
+  ui->threshold_spinbox->setMaximum(MAXIMAL_THRESHOLD);
   connect(ui->apply_button, &QPushButton::clicked, this,
           &MainWindow::applySettings);
   connect(ui->reset_button, &QPushButton::clicked, this, &MainWindow::reset);
@@ -20,6 +22,7 @@ MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::resetMenu() {
   ui->maxiteration_spinbox->setValue(ui->canvas->getMaxIterations());
+  ui->threshold_spinbox->setValue(ui->canvas->getThreshold());
 }
 
 void MainWindow::reset() {
@@ -27,6 +30,18 @@ void MainWindow::reset() {
   resetMenu();
 }
 void MainWindow::applySettings() {
-  ui->canvas->setMaxIterations(ui->maxiteration_spinbox->value());
-  ui->canvas->redraw();
+  bool anything_changed = false;
+  bool ok = ui->canvas->setMaxIterations(ui->maxiteration_spinbox->value());
+  anything_changed |= ok;
+  if (!ok) {
+    ui->maxiteration_spinbox->setValue(ui->canvas->getMaxIterations());
+  }
+  ok = ui->canvas->setThreshold(ui->threshold_spinbox->value());
+  anything_changed |= ok;
+  if (!ok) {
+    ui->threshold_spinbox->setValue(ui->canvas->getThreshold());
+  }
+  if (anything_changed) {
+    ui->canvas->redraw();
+  }
 }

@@ -31,8 +31,8 @@ void CanvasWidget::redraw() { renderer->setNextJob(params); }
 
 void CanvasWidget::resetPan() {
   params.center = DEFAULT_CENTER;
-  params.zoom = std::max(3. / params.canvas_size.width(),
-                         2. / params.canvas_size.height());
+  params.zoom = std::max(3.0 / params.canvas_size.width(),
+                         2.5 / params.canvas_size.height());
   redraw();
 }
 
@@ -42,11 +42,26 @@ void CanvasWidget::reset() {
   resetPan();
 }
 
-unsigned CanvasWidget::getMaxIterations() const {
+unsigned CanvasWidget::getMaxIterations() const noexcept {
   return params.max_iterations;
 }
-void CanvasWidget::setMaxIterations(unsigned value) {
-  params.max_iterations = value;
+bool CanvasWidget::setMaxIterations(unsigned value) noexcept {
+  if (MINIMAL_MAX_ITERATIONS <= value && value <= MAXIMAL_MAX_ITERATIONS) {
+    params.max_iterations = value;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+qreal CanvasWidget::getThreshold() const noexcept { return params.threshold; }
+bool CanvasWidget::setThreshold(qreal threshold) noexcept {
+  if (MINIMAL_THRESHOLD <= threshold && threshold <= MAXIMAL_THRESHOLD) {
+    params.threshold = threshold;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool CanvasWidget::setImageSize(QSize new_size) {
