@@ -22,8 +22,12 @@ class Renderer : public QObject {
   bool has_new_job_or_jobs_ended = false;
   bool jobs_ended = false;
   QWaitCondition waiting_for_job = {};
+  unsigned debt = 0;
 
  public:
+  static constexpr auto IMAGE_FORMAT = QImage::Format::Format_RGB32;
+  using pixel_t = quint32;
+
   Renderer() = default;
 
   void setNextJob(RenderingJob job);
@@ -34,7 +38,7 @@ class Renderer : public QObject {
   // caller must hold the mutex
   void jumpToNextJob();
 
-  quint32 renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
+  pixel_t renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
                            qreal threshold);
   void doJob(RenderingJob const& job);
 
