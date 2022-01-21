@@ -1,6 +1,7 @@
 #pragma once
 #include <QImage>
 #include <QMutex>
+#include <QObject>
 #include <QPoint>
 #include <QRunnable>
 #include <QSize>
@@ -10,6 +11,8 @@
 #include "rendering_job.h"
 
 namespace mandelbrot {
+
+class JobCancelled : public std::exception {};
 
 class Renderer : public QObject {
   Q_OBJECT
@@ -31,8 +34,8 @@ class Renderer : public QObject {
   // caller must hold the mutex
   void jumpToNextJob();
 
-  static quint32 renderPointInRGB(qreal x0, qreal y0,
-                                  unsigned int max_iterations, qreal threshold);
+  quint32 renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
+                           qreal threshold);
   void doJob(RenderingJob const& job);
 
  public:

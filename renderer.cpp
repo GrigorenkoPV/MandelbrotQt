@@ -4,7 +4,6 @@
 #include <QPoint>
 #include <algorithm>
 #include <cstring>
-#include <vector>
 
 #include "rendering_job.h"
 
@@ -49,6 +48,7 @@ quint32 Renderer::renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
       0xcc8000, 0x995700, 0x6a3403, 0x421e0f,
   };
   static constexpr size_t palette_size = sizeof(palette) / sizeof(quint32);
+  static unsigned total_iterations = 0;
   qreal x = 0;
   qreal y = 0;
   qreal x2 = 0;
@@ -61,6 +61,13 @@ quint32 Renderer::renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
     x = x2 - y2 + x0;
     x2 = x * x;
     y2 = y * y;
+    if (++total_iterations == CHECK_CANCEL_EVERY_ITERATIONS) {
+      total_iterations = 0;
+      QMutexLocker qml(&mutex);
+      if (has_new_job_or_jobs_ended) {
+        throw JobCancelled{};
+      }
+    }
   }
   return 0x000000;
 }
@@ -73,9 +80,19 @@ std::ostream& operator<<(std::ostream& os, RenderingJob const& job) {
 }
 #endif
 
-// todo: parallelism maybe?
 void Renderer::doJob(const RenderingJob& job) {
-  for (unsigned square_side : {16, 4, 1}) {
+  static unsigned debt = 0;
+  ++debt;
+  unsigned start_square_side;
+  if (debt > 16) {
+    start_square_side = 64;
+  } else if (debt > 4) {
+    start_square_side = 16;
+  } else {
+    start_square_side = 4;
+  }
+  for (auto square_side = start_square_side; square_side != 0;
+       square_side /= 4) {
 #ifndef NDEBUG
     auto t_start = std::chrono::high_resolution_clock::now();
 #endif
@@ -95,12 +112,6 @@ void Renderer::doJob(const RenderingJob& job) {
         std::fill_n(reinterpret_cast<quint32*>(etalon_row) + x, n, color);
         x += n;
       }
-      {
-        QMutexLocker qml(&mutex);
-        if (has_new_job_or_jobs_ended) {
-          return;
-        }
-      }
       for (unsigned d = 1; (d < square_side) && (y + d < height); ++d) {
         std::memcpy(etalon_row + line_size * d, etalon_row, line_size);
       }
@@ -115,12 +126,19 @@ void Renderer::doJob(const RenderingJob& job) {
         << "ms" << std::endl;
 #endif
     emit sendImage(std::move(image));
+    debt = 0;
   }
 }
 
 void Renderer::run() {
   for (auto job = getNextJob(); job.has_value(); job = getNextJob()) {
-    doJob(*job);
+    try {
+      doJob(*job);
+    } catch (JobCancelled const&) {
+#ifndef NDEBUG
+      std::cerr << "Cancelled" << std::endl;
+#endif
+    }
   }
   emit finished();
 }
