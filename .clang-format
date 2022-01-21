@@ -1,1 +1,4 @@
 BasedOnStyle: Google
+ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: Empty

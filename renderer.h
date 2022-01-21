@@ -38,8 +38,7 @@ class Renderer : public QObject {
   // caller must hold the mutex
   void jumpToNextJob();
 
-  pixel_t renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations,
-                           qreal threshold);
+  pixel_t renderPointInRGB(qreal x0, qreal y0, unsigned max_iterations, qreal threshold);
   void doJob(RenderingJob const& job);
 
  public:

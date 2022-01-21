@@ -7,32 +7,29 @@
 namespace mandelbrot {
 
 CanvasWidget::CanvasWidget(QWidget* parent)
-    : QWidget(parent),
-      renderer(new Renderer()),
-      current_image(),
-      last_mouse_position(),
-      params() {
+    : QWidget(parent), renderer(new Renderer()), current_image(), last_mouse_position(), params() {
   setFocusPolicy(Qt::ClickFocus);
   auto thread = new QThread();
   renderer->moveToThread(thread);
   QObject::connect(thread, &QThread::started, renderer, &Renderer::run);
-  QObject::connect(renderer, &Renderer::sendImage, this,
-                   &CanvasWidget::receiveImage);
+  QObject::connect(renderer, &Renderer::sendImage, this, &CanvasWidget::receiveImage);
   QObject::connect(renderer, &Renderer::finished, thread, &QThread::quit);
-  QObject::connect(renderer, &Renderer::finished, renderer,
-                   &Renderer::deleteLater);
+  QObject::connect(renderer, &Renderer::finished, renderer, &Renderer::deleteLater);
   QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
   thread->start();
 }
 
-CanvasWidget::~CanvasWidget() { renderer->stop(); }
+CanvasWidget::~CanvasWidget() {
+  renderer->stop();
+}
 
-void CanvasWidget::redraw() { renderer->setNextJob(params); }
+void CanvasWidget::redraw() {
+  renderer->setNextJob(params);
+}
 
 void CanvasWidget::resetPan() {
   params.center = DEFAULT_CENTER;
-  params.zoom = std::max(3.0 / params.canvas_size.width(),
-                         2.5 / params.canvas_size.height());
+  params.zoom = std::max(3.0 / params.canvas_size.width(), 2.5 / params.canvas_size.height());
   redraw();
 }
 
@@ -54,7 +51,9 @@ bool CanvasWidget::setMaxIterations(unsigned value) noexcept {
   }
 }
 
-qreal CanvasWidget::getThreshold() const noexcept { return params.threshold; }
+qreal CanvasWidget::getThreshold() const noexcept {
+  return params.threshold;
+}
 bool CanvasWidget::setThreshold(qreal threshold) noexcept {
   if (MINIMAL_THRESHOLD <= threshold && threshold <= MAXIMAL_THRESHOLD) {
     params.threshold = threshold;
